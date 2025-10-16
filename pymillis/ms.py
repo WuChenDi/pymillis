@@ -23,7 +23,7 @@ class MSError(Exception):
     pass
 
 
-def ms(value: Union[str, int, float], *, long: bool = False) -> Union[float, str]:
+def ms(value: Union[str, int, float], *, long: bool = False) -> Union[int, float, str]:
     """
     Parse or format the given value.
     
@@ -32,7 +32,7 @@ def ms(value: Union[str, int, float], *, long: bool = False) -> Union[float, str
         long: Set to True to use verbose formatting. Defaults to False.
         
     Returns:
-        If value is a string, returns milliseconds as number (float).
+        If value is a string, returns milliseconds as number (int or float).
         If value is a number, returns formatted string.
         
     Raises:
@@ -40,7 +40,7 @@ def ms(value: Union[str, int, float], *, long: bool = False) -> Union[float, str
         
     Examples:
         >>> ms('2 days')
-        172800000.0
+        172800000
         >>> ms(172800000)
         '2d'
         >>> ms(172800000, long=True)
@@ -56,7 +56,7 @@ def ms(value: Union[str, int, float], *, long: bool = False) -> Union[float, str
         )
 
 
-def parse(value: str) -> float:
+def parse(value: str) -> Union[int, float]:
     """
     Parse the given string and return milliseconds.
     
@@ -64,18 +64,18 @@ def parse(value: str) -> float:
         value: A string to parse to milliseconds
         
     Returns:
-        The parsed value in milliseconds, or raises MSError if invalid
+        The parsed value in milliseconds (as int if whole number, float otherwise)
         
     Raises:
         MSError: If the string is invalid or cannot be parsed
         
     Examples:
         >>> parse('2d')
-        172800000.0
+        172800000
         >>> parse('1.5 hours')
         5400000.0
         >>> parse('1y')
-        31557600000.0
+        31557600000
     """
     if not isinstance(value, str):
         raise MSError(
@@ -97,37 +97,41 @@ def parse(value: str) -> float:
     num_value = float(groups['value'])
     unit = (groups['unit'] or 'ms').lower()
     
+    def to_int_if_whole(val: float) -> Union[int, float]:
+        """Convert to int if the value is a whole number."""
+        return int(val) if val == int(val) else val
+    
     # Years
     if unit in ('years', 'year', 'yrs', 'yr', 'y'):
-        return num_value * Y
+        return to_int_if_whole(num_value * Y)
     # Months
     elif unit in ('months', 'month', 'mo'):
-        return num_value * MO
+        return to_int_if_whole(num_value * MO)
     # Weeks
     elif unit in ('weeks', 'week', 'w'):
-        return num_value * W
+        return to_int_if_whole(num_value * W)
     # Days
     elif unit in ('days', 'day', 'd'):
-        return num_value * D
+        return to_int_if_whole(num_value * D)
     # Hours
     elif unit in ('hours', 'hour', 'hrs', 'hr', 'h'):
-        return num_value * H
+        return to_int_if_whole(num_value * H)
     # Minutes
     elif unit in ('minutes', 'minute', 'mins', 'min', 'm'):
-        return num_value * M
+        return to_int_if_whole(num_value * M)
     # Seconds
     elif unit in ('seconds', 'second', 'secs', 'sec', 's'):
-        return num_value * S
+        return to_int_if_whole(num_value * S)
     # Milliseconds
     elif unit in ('milliseconds', 'millisecond', 'msecs', 'msec', 'ms'):
-        return num_value
+        return to_int_if_whole(num_value)
     else:
         raise MSError(
             f'Unknown unit "{unit}" provided to ms.parse(). value={repr(value)}'
         )
 
 
-def parse_strict(value: str) -> float:
+def parse_strict(value: str) -> Union[int, float]:
     """
     Parse the given string and return milliseconds (strict version).
     

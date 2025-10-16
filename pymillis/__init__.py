@@ -1,8 +1,7 @@
 """
 pymillis - Milliseconds conversion utility
 
-A Python port of the popular JavaScript ms library.
-Convert between milliseconds and human-readable time strings.
+Use this package to easily convert various time formats to milliseconds.
 
 Usage:
     >>> from pymillis import ms

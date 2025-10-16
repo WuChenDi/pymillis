@@ -1,3 +1,6 @@
+[![PyPI version](https://badge.fury.io/py/pymillis.svg)](https://badge.fury.io/py/pymillis)
+[![Python Support](https://img.shields.io/pypi/pyversions/pymillis.svg)](https://pypi.org/project/pymillis/)
+
 # pymillis
 
 Use this package to easily convert various time formats to milliseconds.
@@ -53,7 +56,7 @@ Parse or format the given value.
 - `long` (bool, optional): Set to `True` to use verbose formatting. Defaults to `False`.
 
 **Returns:**
-- If `value` is a string, returns milliseconds as `float`
+- If `value` is a string, returns milliseconds as `int` (for whole numbers) or `float` (for decimals)
 - If `value` is a number, returns formatted string as `str`
 
 **Raises:**
@@ -67,7 +70,7 @@ Parse the given string and return milliseconds.
 - `value` (str): A string to parse to milliseconds
 
 **Returns:**
-- `float`: The parsed value in milliseconds
+- `int | float`: The parsed value in milliseconds (int for whole numbers, float for decimals)
 
 **Raises:**
 - `MSError`: If the string is invalid or cannot be parsed
@@ -169,7 +172,7 @@ max_requests = 100
 from pymillis import ms
 
 # Calculate time differences
-meeting_duration = ms('2h') - ms('30m')  # 5400000.0 ms (1.5 hours)
+meeting_duration = ms('2h') - ms('30m')  # 5400000 ms (1.5 hours)
 ```
 
 ## Error Handling
@@ -208,7 +211,6 @@ except MSError as e:
 
 ### Precision
 
-- Results are returned as `float` for precision
 - **Month calculation**: 1 month = 1/12 year ≈ 30.44 days (average value)
 - **Year calculation**: 1 year = 365.25 days (accounting for leap years)
 
