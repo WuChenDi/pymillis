@@ -14,7 +14,7 @@ Usage:
     '2 days'
 """
 
-from pyms.ms import ms, parse, parse_strict, format, MSError
-from pyms._version import __version__
+from .ms import ms, parse, parse_strict, format, MSError
+from ._version import __version__
 
 __all__ = ['ms', 'parse', 'parse_strict', 'format', 'MSError', '__version__']

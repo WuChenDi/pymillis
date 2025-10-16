@@ -1,21 +1,12 @@
 """
-ms - Milliseconds conversion utility
+pyms.ms - Core milliseconds conversion functionality
 
-A Python port of the popular JavaScript ms library.
-Convert between milliseconds and human-readable time strings.
-
-Usage:
-    >>> import ms
-    >>> ms.ms('2 days')
-    172800000
-    >>> ms.ms(172800000)
-    '2d'
-    >>> ms.ms(172800000, long=True)
-    '2 days'
+Part of the pyms package - A Python port of the popular JavaScript ms library.
 """
 
 import re
-from typing import Union, Optional, Literal
+import math
+from typing import Union
 
 __all__ = ['ms', 'parse', 'parse_strict', 'format', 'MSError']
 
@@ -34,7 +25,7 @@ class MSError(Exception):
     pass
 
 
-def ms(value: Union[str, int, float], *, long: bool = False) -> Union[int, str]:
+def ms(value: Union[str, int, float], *, long: bool = False) -> Union[float, str]:
     """
     Parse or format the given value.
     
@@ -43,7 +34,7 @@ def ms(value: Union[str, int, float], *, long: bool = False) -> Union[int, str]:
         long: Set to True to use verbose formatting. Defaults to False.
         
     Returns:
-        If value is a string, returns milliseconds as int.
+        If value is a string, returns milliseconds as number (float).
         If value is a number, returns formatted string.
         
     Raises:
@@ -51,7 +42,7 @@ def ms(value: Union[str, int, float], *, long: bool = False) -> Union[int, str]:
         
     Examples:
         >>> ms('2 days')
-        172800000
+        172800000.0
         >>> ms(172800000)
         '2d'
         >>> ms(172800000, long=True)
@@ -67,7 +58,7 @@ def ms(value: Union[str, int, float], *, long: bool = False) -> Union[int, str]:
         )
 
 
-def parse(value: str) -> int:
+def parse(value: str) -> float:
     """
     Parse the given string and return milliseconds.
     
@@ -75,18 +66,18 @@ def parse(value: str) -> int:
         value: A string to parse to milliseconds
         
     Returns:
-        The parsed value in milliseconds
+        The parsed value in milliseconds, or raises MSError if invalid
         
     Raises:
         MSError: If the string is invalid or cannot be parsed
         
     Examples:
         >>> parse('2d')
-        172800000
+        172800000.0
         >>> parse('1.5 hours')
-        5400000
+        5400000.0
         >>> parse('1y')
-        31557600000
+        31557600000.0
     """
     if not isinstance(value, str):
         raise MSError(
@@ -110,35 +101,35 @@ def parse(value: str) -> int:
     
     # Years
     if unit in ('years', 'year', 'yrs', 'yr', 'y'):
-        return int(num_value * Y)
+        return num_value * Y
     # Months
     elif unit in ('months', 'month', 'mo'):
-        return int(num_value * MO)
+        return num_value * MO
     # Weeks
     elif unit in ('weeks', 'week', 'w'):
-        return int(num_value * W)
+        return num_value * W
     # Days
     elif unit in ('days', 'day', 'd'):
-        return int(num_value * D)
+        return num_value * D
     # Hours
     elif unit in ('hours', 'hour', 'hrs', 'hr', 'h'):
-        return int(num_value * H)
+        return num_value * H
     # Minutes
     elif unit in ('minutes', 'minute', 'mins', 'min', 'm'):
-        return int(num_value * M)
+        return num_value * M
     # Seconds
     elif unit in ('seconds', 'second', 'secs', 'sec', 's'):
-        return int(num_value * S)
+        return num_value * S
     # Milliseconds
     elif unit in ('milliseconds', 'millisecond', 'msecs', 'msec', 'ms'):
-        return int(num_value)
+        return num_value
     else:
         raise MSError(
             f'Unknown unit "{unit}" provided to ms.parse(). value={repr(value)}'
         )
 
 
-def parse_strict(value: str) -> int:
+def parse_strict(value: str) -> float:
     """
     Parse the given string and return milliseconds (strict version).
     
@@ -178,7 +169,8 @@ def format(ms_value: Union[int, float], *, long: bool = False) -> str:
     if not isinstance(ms_value, (int, float)):
         raise MSError('Value provided to ms.format() must be of type number.')
     
-    if not (isinstance(ms_value, int) or (isinstance(ms_value, float) and ms_value == ms_value and ms_value != float('inf') and ms_value != float('-inf'))):
+    # Check if the number is finite (not NaN, not Infinity)
+    if not math.isfinite(ms_value):
         raise MSError('Value provided to ms.format() must be of type number.')
     
     return _fmt_long(ms_value) if long else _fmt_short(ms_value)
@@ -228,6 +220,6 @@ def _fmt_long(ms_value: Union[int, float]) -> str:
 
 def _plural(ms_value: Union[int, float], ms_abs: float, n: float, name: str) -> str:
     """Pluralization helper."""
+    is_plural = ms_abs >= n * 1.5
     rounded = round(ms_value / n)
-    is_plural = abs(rounded) != 1
     return f"{rounded} {name}{'s' if is_plural else ''}"
