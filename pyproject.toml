@@ -3,7 +3,7 @@ requires = ["flit_core >=3.11,<4"]
 build-backend = "flit_core.buildapi"
 
 [project]
-name = "pyms"
+name = "pymillis"
 authors = [{name = "wudi", email = "wuchendi96@gmail.com"}]
 description = "Use this package to easily convert various time formats to milliseconds."
 readme = "README.md"
@@ -28,8 +28,8 @@ classifiers = [
 ]
 
 [project.urls]
-"Bug Reports" = "https://github.com/WuChenDi/pyms/issues"
-"Source" = "https://github.com/WuChenDi/pyms"
+"Bug Reports" = "https://github.com/WuChenDi/pymillis/issues"
+"Source" = "https://github.com/WuChenDi/pymillis"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

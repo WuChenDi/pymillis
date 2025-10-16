@@ -1,7 +1,7 @@
 """Tests for parse_strict function"""
 
 import pytest
-from pyms import parse_strict
+from pymillis import parse_strict
 
 
 class TestParseStrictString:

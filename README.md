@@ -1,11 +1,11 @@
-# pyms
+# pymillis
 
 Use this package to easily convert various time formats to milliseconds.
 
 ## Installation
 
 ```bash
-pip install pyms
+pip install pymillis
 ```
 
 ## Usage
@@ -13,21 +13,21 @@ pip install pyms
 ### Basic Usage
 
 ```python
-from pyms import ms
+from pymillis import ms
 
 # Parse time strings to milliseconds
-ms('2 days')          # 172800000.0
-ms('1d')              # 86400000.0
-ms('10h')             # 36000000.0
-ms('2.5 hrs')         # 9000000.0
-ms('2h')              # 7200000.0
-ms('1m')              # 60000.0
-ms('5s')              # 5000.0
-ms('1y')              # 31557600000.0
-ms('100')             # 100.0
-ms('-3 days')         # -259200000.0
-ms('-1h')             # -3600000.0
-ms('-200')            # -200.0
+ms('2 days')          # 172800000
+ms('1d')              # 86400000
+ms('10h')             # 36000000
+ms('2.5 hrs')         # 9000000
+ms('2h')              # 7200000
+ms('1m')              # 60000
+ms('5s')              # 5000
+ms('1y')              # 31557600000
+ms('100')             # 100
+ms('-3 days')         # -259200000
+ms('-1h')             # -3600000
+ms('-200')            # -200
 
 # Format milliseconds to strings
 ms(60000)             # '1m'
@@ -90,16 +90,16 @@ Format the given milliseconds as a string.
 
 ```python
 # Import main function
-from pyms import ms
+from pymillis import ms
 
 # Import specific functions
-from pyms import parse, format, parse_strict
+from pymillis import parse, format, parse_strict
 
 # Import exception
-from pyms import MSError
+from pymillis import MSError
 
 # Import everything
-from pyms import ms, parse, format, MSError
+from pymillis import ms, parse, format, MSError
 ```
 
 ## Supported Time Units
@@ -135,7 +135,7 @@ All units are case-insensitive, so `1D`, `1d`, `1 Day`, `1 DAY` are all equivale
 
 ```python
 import time
-from pyms import ms
+from pymillis import ms
 
 # Convert to seconds for time.sleep()
 timeout = ms('5s') / 1000
@@ -146,7 +146,7 @@ time.sleep(timeout)
 
 ```python
 import time
-from pyms import ms
+from pymillis import ms
 
 # Set cache expiration
 cache_duration = ms('1h')
@@ -156,7 +156,7 @@ expires_at = time.time() * 1000 + cache_duration
 ### Rate Limiting
 
 ```python
-from pyms import ms
+from pymillis import ms
 
 # Define rate limit window
 rate_limit_window = ms('1m')
@@ -166,7 +166,7 @@ max_requests = 100
 ### Calculating Durations
 
 ```python
-from pyms import ms
+from pymillis import ms
 
 # Calculate time differences
 meeting_duration = ms('2h') - ms('30m')  # 5400000.0 ms (1.5 hours)
@@ -177,7 +177,7 @@ meeting_duration = ms('2h') - ms('30m')  # 5400000.0 ms (1.5 hours)
 The library raises `MSError` for invalid inputs:
 
 ```python
-from pyms import ms, MSError
+from pymillis import ms, MSError
 
 # Invalid format
 try:

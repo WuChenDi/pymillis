@@ -1,7 +1,7 @@
 """Tests for parse function"""
 
 import pytest
-from pyms import parse
+from pymillis import parse
 
 
 class TestParseString:

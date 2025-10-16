@@ -1,7 +1,7 @@
 """Tests for format function"""
 
 import pytest
-from pyms import format
+from pymillis import format
 
 
 class TestFormatNumberLong:

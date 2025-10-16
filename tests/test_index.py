@@ -1,7 +1,7 @@
 """Tests for ms function (main entry point)"""
 
 import pytest
-from pyms import ms
+from pymillis import ms
 
 
 class TestMsString:

@@ -1,1 +1,1 @@
-"""Tests for pyms package."""
+"""Tests for pymillis package."""

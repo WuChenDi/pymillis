@@ -1,5 +1,5 @@
 """
-pyms.ms - Core milliseconds conversion functionality
+pymillis.ms - Core milliseconds conversion functionality
 """
 
 import re

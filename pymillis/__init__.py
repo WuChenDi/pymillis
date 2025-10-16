@@ -1,11 +1,11 @@
 """
-pyms - Milliseconds conversion utility
+pymillis - Milliseconds conversion utility
 
 A Python port of the popular JavaScript ms library.
 Convert between milliseconds and human-readable time strings.
 
 Usage:
-    >>> from pyms import ms
+    >>> from pymillis import ms
     >>> ms('2 days')
     172800000
     >>> ms(172800000)
