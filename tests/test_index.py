@@ -313,22 +313,22 @@ class TestMsInvalidInputs:
     def test_should_throw_error_when_ms_undefined(self):
         """should throw an error, when ms(undefined)"""
         with pytest.raises(Exception):
-            ms(None)
+            ms(None) # type: ignore
     
     def test_should_throw_error_when_ms_null(self):
         """should throw an error, when ms(null)"""
         with pytest.raises(Exception):
-            ms(None)
+            ms(None) # type: ignore
     
     def test_should_throw_error_when_ms_list(self):
         """should throw an error, when ms([])"""
         with pytest.raises(Exception):
-            ms([])
+            ms([]) # type: ignore
     
     def test_should_throw_error_when_ms_dict(self):
         """should throw an error, when ms({})"""
         with pytest.raises(Exception):
-            ms({})
+            ms({}) # type: ignore
     
     def test_should_throw_error_when_ms_nan(self):
         """should throw an error, when ms(NaN)"""

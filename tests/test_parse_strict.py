@@ -166,34 +166,34 @@ class TestParseStrictInvalidInputs:
     def test_should_throw_error_when_parse_strict_undefined(self):
         """should throw an error, when parseStrict(undefined)"""
         with pytest.raises(Exception):
-            parse_strict(None)
+            parse_strict(None) # type: ignore
     
     def test_should_throw_error_when_parse_strict_null(self):
         """should throw an error, when parseStrict(null)"""
         with pytest.raises(Exception):
-            parse_strict(None)
+            parse_strict(None) # type: ignore
     
     def test_should_throw_error_when_parse_strict_list(self):
         """should throw an error, when parseStrict([])"""
         with pytest.raises(Exception):
-            parse_strict([])
+            parse_strict([]) # type: ignore
     
     def test_should_throw_error_when_parse_strict_dict(self):
         """should throw an error, when parseStrict({})"""
         with pytest.raises(Exception):
-            parse_strict({})
+            parse_strict({}) # type: ignore
     
     def test_should_throw_error_when_parse_strict_nan(self):
         """should throw an error, when parseStrict(NaN)"""
         with pytest.raises(Exception):
-            parse_strict(float('nan'))
+            parse_strict(float('nan')) # type: ignore
     
     def test_should_throw_error_when_parse_strict_infinity(self):
         """should throw an error, when parseStrict(Infinity)"""
         with pytest.raises(Exception):
-            parse_strict(float('inf'))
+            parse_strict(float('inf')) # type: ignore
     
     def test_should_throw_error_when_parse_strict_negative_infinity(self):
         """should throw an error, when parseStrict(-Infinity)"""
         with pytest.raises(Exception):
-            parse_strict(float('-inf'))
+            parse_strict(float('-inf')) # type: ignore

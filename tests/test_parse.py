@@ -162,34 +162,34 @@ class TestParseInvalidInputs:
     def test_should_throw_error_when_parse_undefined(self):
         """should throw an error, when parse(undefined)"""
         with pytest.raises(Exception):
-            parse(None)
+            parse(None) # type: ignore
     
     def test_should_throw_error_when_parse_null(self):
         """should throw an error, when parse(null)"""
         with pytest.raises(Exception):
-            parse(None)
+            parse(None) # type: ignore
     
     def test_should_throw_error_when_parse_list(self):
         """should throw an error, when parse([])"""
         with pytest.raises(Exception):
-            parse([])
+            parse([]) # type: ignore
     
     def test_should_throw_error_when_parse_dict(self):
         """should throw an error, when parse({})"""
         with pytest.raises(Exception):
-            parse({})
+            parse({}) # type: ignore
     
     def test_should_throw_error_when_parse_nan(self):
         """should throw an error, when parse(NaN)"""
         with pytest.raises(Exception):
-            parse(float('nan'))
+            parse(float('nan')) # type: ignore
     
     def test_should_throw_error_when_parse_infinity(self):
         """should throw an error, when parse(Infinity)"""
         with pytest.raises(Exception):
-            parse(float('inf'))
+            parse(float('inf')) # type: ignore
     
     def test_should_throw_error_when_parse_negative_infinity(self):
         """should throw an error, when parse(-Infinity)"""
         with pytest.raises(Exception):
-            parse(float('-inf'))
+            parse(float('-inf')) # type: ignore

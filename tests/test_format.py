@@ -174,27 +174,27 @@ class TestFormatInvalidInputs:
     def test_should_throw_error_when_format_empty_string(self):
         """should throw an error, when format("")"""
         with pytest.raises(Exception):
-            format('')
+            format('') # type: ignore
     
     def test_should_throw_error_when_format_undefined(self):
         """should throw an error, when format(undefined)"""
         with pytest.raises(Exception):
-            format(None)
+            format(None) # type: ignore
     
     def test_should_throw_error_when_format_null(self):
         """should throw an error, when format(null)"""
         with pytest.raises(Exception):
-            format(None)
+            format(None) # type: ignore
     
     def test_should_throw_error_when_format_list(self):
         """should throw an error, when format([])"""
         with pytest.raises(Exception):
-            format([])
+            format([]) # type: ignore
     
     def test_should_throw_error_when_format_dict(self):
         """should throw an error, when format({})"""
         with pytest.raises(Exception):
-            format({})
+            format({}) # type: ignore
     
     def test_should_throw_error_when_format_nan(self):
         """should throw an error, when format(NaN)"""
