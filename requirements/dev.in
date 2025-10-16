@@ -1,2 +1,6 @@
+pytest
 pytest-cov
 wheel
+build
+black
+pip-tools
