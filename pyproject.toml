@@ -5,7 +5,7 @@ build-backend = "flit_core.buildapi"
 [project]
 name = "pyms"
 authors = [{name = "wudi", email = "wuchendi96@gmail.com"}]
-description = "Milliseconds conversion utility - Python port of the popular JavaScript ms library"
+description = "Use this package to easily convert various time formats to milliseconds."
 readme = "README.md"
 dynamic = ["version"]
 license = {text = "MIT"}

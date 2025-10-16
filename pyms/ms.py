@@ -1,7 +1,5 @@
 """
 pyms.ms - Core milliseconds conversion functionality
-
-Part of the pyms package - A Python port of the popular JavaScript ms library.
 """
 
 import re

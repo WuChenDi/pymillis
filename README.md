@@ -1,8 +1,6 @@
 # pyms
 
-Milliseconds conversion utility - Python port of the popular JavaScript [ms](https://github.com/vercel/ms) library.
-
-Convert between milliseconds and human-readable time strings with ease.
+Use this package to easily convert various time formats to milliseconds.
 
 ## Installation
 
@@ -18,18 +16,18 @@ pip install pyms
 from pyms import ms
 
 # Parse time strings to milliseconds
-ms('2 days')          # 172800000
-ms('1d')              # 86400000
-ms('10h')             # 36000000
-ms('2.5 hrs')         # 9000000
-ms('2h')              # 7200000
-ms('1m')              # 60000
-ms('5s')              # 5000
-ms('1y')              # 31557600000
-ms('100')             # 100
-ms('-3 days')         # -259200000
-ms('-1h')             # -3600000
-ms('-200')            # -200
+ms('2 days')          # 172800000.0
+ms('1d')              # 86400000.0
+ms('10h')             # 36000000.0
+ms('2.5 hrs')         # 9000000.0
+ms('2h')              # 7200000.0
+ms('1m')              # 60000.0
+ms('5s')              # 5000.0
+ms('1y')              # 31557600000.0
+ms('100')             # 100.0
+ms('-3 days')         # -259200000.0
+ms('-1h')             # -3600000.0
+ms('-200')            # -200.0
 
 # Format milliseconds to strings
 ms(60000)             # '1m'
@@ -55,8 +53,8 @@ Parse or format the given value.
 - `long` (bool, optional): Set to `True` to use verbose formatting. Defaults to `False`.
 
 **Returns:**
-- If `value` is a string, returns milliseconds as `int`
-- If `value` is a number, returns formatted string
+- If `value` is a string, returns milliseconds as `float`
+- If `value` is a number, returns formatted string as `str`
 
 **Raises:**
 - `MSError`: If value is not a non-empty string or a number
@@ -69,7 +67,7 @@ Parse the given string and return milliseconds.
 - `value` (str): A string to parse to milliseconds
 
 **Returns:**
-- `int`: The parsed value in milliseconds
+- `float`: The parsed value in milliseconds
 
 **Raises:**
 - `MSError`: If the string is invalid or cannot be parsed
@@ -131,6 +129,49 @@ All units are case-insensitive, so `1D`, `1d`, `1 Day`, `1 DAY` are all equivale
 - 🎯 Type hints for better IDE support
 - ✅ Comprehensive error handling
 
+## Common Use Cases
+
+### Setting Timeouts
+
+```python
+import time
+from pyms import ms
+
+# Convert to seconds for time.sleep()
+timeout = ms('5s') / 1000
+time.sleep(timeout)
+```
+
+### Caching
+
+```python
+import time
+from pyms import ms
+
+# Set cache expiration
+cache_duration = ms('1h')
+expires_at = time.time() * 1000 + cache_duration
+```
+
+### Rate Limiting
+
+```python
+from pyms import ms
+
+# Define rate limit window
+rate_limit_window = ms('1m')
+max_requests = 100
+```
+
+### Calculating Durations
+
+```python
+from pyms import ms
+
+# Calculate time differences
+meeting_duration = ms('2h') - ms('30m')  # 5400000.0 ms (1.5 hours)
+```
+
 ## Error Handling
 
 The library raises `MSError` for invalid inputs:
@@ -138,15 +179,46 @@ The library raises `MSError` for invalid inputs:
 ```python
 from pyms import ms, MSError
 
+# Invalid format
 try:
     ms('invalid')
 except MSError as e:
     print(f"Error: {e}")
 
+# Non-finite number
 try:
     ms(float('nan'))
 except MSError as e:
     print(f"Error: {e}")
+
+# Empty string
+try:
+    ms('')
+except MSError as e:
+    print(f"Error: {e}")
+
+# String too long (>100 characters)
+try:
+    ms('a' * 101)
+except MSError as e:
+    print(f"Error: {e}")
+```
+
+## Notes
+
+### Precision
+
+- Results are returned as `float` for precision
+- **Month calculation**: 1 month = 1/12 year ≈ 30.44 days (average value)
+- **Year calculation**: 1 year = 365.25 days (accounting for leap years)
+
+### Rounding
+
+When formatting, values are rounded to the nearest integer for the selected unit:
+
+```python
+ms(1500)              # '2s'  (rounded from 1.5s)
+ms(90000)             # '2m'  (rounded from 1.5m)
 ```
 
 ## 📜 License
