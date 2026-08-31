@@ -1,5 +1,4 @@
-"""
-pymillis - Milliseconds conversion utility
+"""pymillis - Milliseconds conversion utility.
 
 Use this package to easily convert various time formats to milliseconds.
 
@@ -13,7 +12,16 @@ Usage:
     '2 days'
 """
 
-from .ms import ms, parse, parse_strict, format, MSError
 from ._version import __version__
+from .ms import ErrorCode, MSError, format, ms, parse, parse_strict, parse_timedelta
 
-__all__ = ['ms', 'parse', 'parse_strict', 'format', 'MSError', '__version__']
+__all__ = [
+    "ErrorCode",
+    "MSError",
+    "__version__",
+    "format",
+    "ms",
+    "parse",
+    "parse_strict",
+    "parse_timedelta",
+]

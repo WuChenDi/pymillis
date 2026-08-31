@@ -1,43 +1,119 @@
-"""
-pymillis.ms - Core milliseconds conversion functionality
-"""
+"""pymillis.ms - Core milliseconds conversion functionality."""
 
-import re
+from __future__ import annotations
+
 import math
-from typing import Union
+import re
+import warnings
+from datetime import timedelta
+from enum import Enum
+from fractions import Fraction
+from typing import Final, overload
 
-__all__ = ['ms', 'parse', 'parse_strict', 'format', 'MSError']
+__all__ = [
+    "ErrorCode",
+    "MSError",
+    "format",
+    "ms",
+    "parse",
+    "parse_strict",
+    "parse_timedelta",
+]
 
-# Time constants in milliseconds
-S = 1000
-M = S * 60
-H = M * 60
-D = H * 24
-W = D * 7
-Y = D * 365.25
-MO = Y / 12
+#: A number of milliseconds: ``int`` for whole values, ``float`` otherwise.
+Milliseconds = int | float
+
+# Time unit constants in milliseconds. A year is 365.25 days and a month is
+# a twelfth of that; both land on whole milliseconds, so all constants are
+# exact integers.
+S: Final = 1000
+M: Final = S * 60
+H: Final = M * 60
+D: Final = H * 24
+W: Final = D * 7
+Y: Final = int(D * 365.25)
+MO: Final = Y // 12
 
 
-class MSError(Exception):
-    """Base exception for ms library errors."""
-    pass
+class ErrorCode(str, Enum):
+    """Machine-readable reason attached to every :class:`MSError`."""
+
+    EMPTY = "empty"
+    TOO_LONG = "too_long"
+    INVALID_FORMAT = "invalid_format"
+    INVALID_TYPE = "invalid_type"
+    NOT_FINITE = "not_finite"
 
 
-def ms(value: Union[str, int, float], *, long: bool = False) -> Union[int, float, str]:
+class MSError(ValueError):
+    """Raised when a value cannot be parsed or formatted.
+
+    Subclasses :class:`ValueError`, so existing ``except ValueError`` handlers
+    keep working. The :attr:`code` attribute identifies the failure without
+    matching on the message text.
     """
-    Parse or format the given value.
-    
+
+    def __init__(self, message: str, code: ErrorCode) -> None:
+        super().__init__(message)
+        self.code = code
+
+
+# Numeric part, optional whitespace, optional alphabetic unit. Always applied
+# with fullmatch(), so trailing characters are rejected.
+_PATTERN: Final = re.compile(r"(?P<value>-?\d*\.?\d+)\s*(?P<unit>[A-Za-z]*)")
+
+_UNIT_MULTIPLIERS: Final[dict[str, int]] = {
+    "years": Y, "year": Y, "yrs": Y, "yr": Y, "y": Y,
+    "months": MO, "month": MO, "mo": MO,
+    "weeks": W, "week": W, "w": W,
+    "days": D, "day": D, "d": D,
+    "hours": H, "hour": H, "hrs": H, "hr": H, "h": H,
+    "minutes": M, "minute": M, "mins": M, "min": M, "m": M,
+    "seconds": S, "second": S, "secs": S, "sec": S, "s": S,
+    "milliseconds": 1, "millisecond": 1, "msecs": 1, "msec": 1, "ms": 1,
+}  # fmt: skip
+
+# Formatting tiers from largest to smallest: threshold in milliseconds, short
+# suffix, and long unit name.
+_UNITS: Final[tuple[tuple[int, str, str], ...]] = (
+    (Y, "y", "year"),
+    (MO, "mo", "month"),
+    (W, "w", "week"),
+    (D, "d", "day"),
+    (H, "h", "hour"),
+    (M, "m", "minute"),
+    (S, "s", "second"),
+)
+
+_MAX_LENGTH: Final = 100
+
+# Long format switches to the plural at 1.5 units.
+_PLURAL_THRESHOLD: Final = Fraction(3, 2)
+
+
+@overload
+def ms(value: str) -> Milliseconds: ...
+
+
+@overload
+def ms(value: int | float, *, long: bool = False) -> str: ...
+
+
+def ms(value: str | int | float, *, long: bool = False) -> Milliseconds | str:
+    """Parse or format the given value.
+
     Args:
-        value: The string or number to convert
-        long: Set to True to use verbose formatting. Defaults to False.
-        
+        value: The string to parse, or the number of milliseconds to format.
+        long: Set to ``True`` to use verbose formatting. Defaults to ``False``.
+
     Returns:
-        If value is a string, returns milliseconds as number (int or float).
-        If value is a number, returns formatted string.
-        
+        Milliseconds when ``value`` is a string, a formatted string when it is
+        a number.
+
     Raises:
-        MSError: If value is not a non-empty string or a number
-        
+        MSError: If ``value`` is neither a string nor a number, or cannot be
+            converted.
+
     Examples:
         >>> ms('2 days')
         172800000
@@ -48,118 +124,123 @@ def ms(value: Union[str, int, float], *, long: bool = False) -> Union[int, float
     """
     if isinstance(value, str):
         return parse(value)
-    elif isinstance(value, (int, float)):
+    if isinstance(value, (int, float)):
         return format(value, long=long)
-    else:
-        raise MSError(
-            f"Value provided to ms() must be a string or number. value={repr(value)}"
-        )
+    raise MSError(
+        f"Value provided to ms() must be a string or number. value={value!r}",
+        ErrorCode.INVALID_TYPE,
+    )
 
 
-def parse(value: str) -> Union[int, float]:
-    """
-    Parse the given string and return milliseconds.
-    
+def parse(value: str) -> Milliseconds:
+    """Parse the given string and return milliseconds.
+
     Args:
-        value: A string to parse to milliseconds
-        
+        value: A string to parse to milliseconds, e.g. ``'2h'`` or ``'1 day'``.
+
     Returns:
-        The parsed value in milliseconds (as int if whole number, float otherwise)
-        
+        The parsed value in milliseconds, as an ``int`` when it is a whole
+        number and a ``float`` otherwise.
+
     Raises:
-        MSError: If the string is invalid or cannot be parsed
-        
+        MSError: If ``value`` is not a string, is empty, exceeds 100
+            characters, or is not a valid time string.
+
     Examples:
         >>> parse('2d')
         172800000
         >>> parse('1.5 hours')
-        5400000.0
-        >>> parse('1y')
-        31557600000
+        5400000
+        >>> parse('.5ms')
+        0.5
     """
     if not isinstance(value, str):
         raise MSError(
-            f"Value provided to ms.parse() must be a string. value={repr(value)}"
+            f"Value provided to ms.parse() must be a string. value={value!r}",
+            ErrorCode.INVALID_TYPE,
         )
-    
-    if len(value) == 0 or len(value) > 100:
+    if not value:
         raise MSError(
-            f"Value provided to ms.parse() must be a string with length between 1 and 99. value={repr(value)}"
+            "Value provided to ms.parse() must not be empty.",
+            ErrorCode.EMPTY,
         )
-    
-    pattern = r'^(?P<value>-?\d*\.?\d+)\s*(?P<unit>milliseconds?|msecs?|ms|seconds?|secs?|s|minutes?|mins?|m|hours?|hrs?|h|days?|d|weeks?|w|months?|mo|years?|yrs?|y)?$'
-    match = re.match(pattern, value, re.IGNORECASE)
-    
-    if not match:
-        raise MSError(f"Invalid time string format. value={repr(value)}")
-    
-    groups = match.groupdict()
-    num_value = float(groups['value'])
-    unit = (groups['unit'] or 'ms').lower()
-    
-    def to_int_if_whole(val: float) -> Union[int, float]:
-        """Convert to int if the value is a whole number."""
-        return int(val) if val == int(val) else val
-    
-    # Years
-    if unit in ('years', 'year', 'yrs', 'yr', 'y'):
-        return to_int_if_whole(num_value * Y)
-    # Months
-    elif unit in ('months', 'month', 'mo'):
-        return to_int_if_whole(num_value * MO)
-    # Weeks
-    elif unit in ('weeks', 'week', 'w'):
-        return to_int_if_whole(num_value * W)
-    # Days
-    elif unit in ('days', 'day', 'd'):
-        return to_int_if_whole(num_value * D)
-    # Hours
-    elif unit in ('hours', 'hour', 'hrs', 'hr', 'h'):
-        return to_int_if_whole(num_value * H)
-    # Minutes
-    elif unit in ('minutes', 'minute', 'mins', 'min', 'm'):
-        return to_int_if_whole(num_value * M)
-    # Seconds
-    elif unit in ('seconds', 'second', 'secs', 'sec', 's'):
-        return to_int_if_whole(num_value * S)
-    # Milliseconds
-    elif unit in ('milliseconds', 'millisecond', 'msecs', 'msec', 'ms'):
-        return to_int_if_whole(num_value)
-    else:
+    if len(value) > _MAX_LENGTH:
         raise MSError(
-            f'Unknown unit "{unit}" provided to ms.parse(). value={repr(value)}'
+            f"Value provided to ms.parse() must not exceed {_MAX_LENGTH} characters.",
+            ErrorCode.TOO_LONG,
         )
 
+    match = _PATTERN.fullmatch(value)
+    if match is None:
+        raise MSError(
+            f"Invalid time string format. value={value!r}",
+            ErrorCode.INVALID_FORMAT,
+        )
 
-def parse_strict(value: str) -> Union[int, float]:
+    unit = match["unit"].lower() or "ms"
+    multiplier = _UNIT_MULTIPLIERS.get(unit)
+    if multiplier is None:
+        raise MSError(
+            f'Unknown unit "{unit}" provided to ms.parse(). value={value!r}',
+            ErrorCode.INVALID_FORMAT,
+        )
+
+    # Fraction keeps the arithmetic exact: 0.1 * 1000 is 100, not 100.000000001.
+    result = Fraction(match["value"]) * multiplier
+    return result.numerator if result.denominator == 1 else float(result)
+
+
+def parse_strict(value: str) -> Milliseconds:
+    """Parse the given string and return milliseconds.
+
+    .. deprecated:: 2.0.0
+        Use :func:`parse` instead; this is an alias kept for API compatibility.
     """
-    Parse the given string and return milliseconds (strict version).
-    
-    This is an alias for parse() provided for API compatibility.
-    
-    Args:
-        value: A string to parse to milliseconds
-        
-    Returns:
-        The parsed value in milliseconds
-    """
+    warnings.warn(
+        "parse_strict() is deprecated since 2.0.0; use parse() instead.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
     return parse(value)
 
 
-def format(ms_value: Union[int, float], *, long: bool = False) -> str:
-    """
-    Format the given milliseconds as a string.
-    
+def parse_timedelta(value: str) -> timedelta:
+    """Parse the given string and return a :class:`datetime.timedelta`.
+
+    Accepts the same input as :func:`parse`. Unlike the Rust counterpart,
+    negative durations are supported because ``timedelta`` can represent them.
+
     Args:
-        ms_value: Milliseconds to format
-        long: Use verbose formatting if True
-        
+        value: A string to parse.
+
     Returns:
-        The formatted string
-        
+        The parsed duration.
+
     Raises:
-        MSError: If ms_value is not a finite number
-        
+        MSError: The same errors as :func:`parse`.
+
+    Examples:
+        >>> parse_timedelta('1.5s')
+        datetime.timedelta(seconds=1, microseconds=500000)
+        >>> parse_timedelta('-1h')
+        datetime.timedelta(days=-1, seconds=82800)
+    """
+    return timedelta(milliseconds=parse(value))
+
+
+def format(ms_value: int | float, *, long: bool = False) -> str:
+    """Format the given milliseconds as a string.
+
+    Args:
+        ms_value: Milliseconds to format.
+        long: Use verbose formatting if ``True``.
+
+    Returns:
+        The formatted string.
+
+    Raises:
+        MSError: If ``ms_value`` is not a finite number.
+
     Examples:
         >>> format(172800000)
         '2d'
@@ -169,59 +250,36 @@ def format(ms_value: Union[int, float], *, long: bool = False) -> str:
         '1h'
     """
     if not isinstance(ms_value, (int, float)):
-        raise MSError('Value provided to ms.format() must be of type number.')
-    
-    # Check if the number is finite (not NaN, not Infinity)
+        raise MSError(
+            f"Value provided to ms.format() must be of type number. value={ms_value!r}",
+            ErrorCode.INVALID_TYPE,
+        )
     if not math.isfinite(ms_value):
-        raise MSError('Value provided to ms.format() must be of type number.')
-    
-    return _fmt_long(ms_value) if long else _fmt_short(ms_value)
+        raise MSError(
+            f"Value provided to ms.format() must be finite. value={ms_value!r}",
+            ErrorCode.NOT_FINITE,
+        )
+
+    value = Fraction(ms_value)
+    value_abs = abs(value)
+    for threshold, suffix, name in _UNITS:
+        if value_abs >= threshold:
+            count = _round_half_away(value / threshold)
+            if not long:
+                return f"{count}{suffix}"
+            plural = "s" if value_abs >= threshold * _PLURAL_THRESHOLD else ""
+            return f"{count} {name}{plural}"
+
+    count = _round_half_away(value)
+    return f"{count} ms" if long else f"{count}ms"
 
 
-def _fmt_short(ms_value: Union[int, float]) -> str:
-    """Short format for ms."""
-    ms_abs = abs(ms_value)
-    
-    if ms_abs >= Y:
-        return f"{round(ms_value / Y)}y"
-    if ms_abs >= MO:
-        return f"{round(ms_value / MO)}mo"
-    if ms_abs >= W:
-        return f"{round(ms_value / W)}w"
-    if ms_abs >= D:
-        return f"{round(ms_value / D)}d"
-    if ms_abs >= H:
-        return f"{round(ms_value / H)}h"
-    if ms_abs >= M:
-        return f"{round(ms_value / M)}m"
-    if ms_abs >= S:
-        return f"{round(ms_value / S)}s"
-    return f"{int(ms_value)}ms"
+def _round_half_away(value: Fraction) -> int:
+    """Round to the nearest integer, with ties going away from zero.
 
-
-def _fmt_long(ms_value: Union[int, float]) -> str:
-    """Long format for ms."""
-    ms_abs = abs(ms_value)
-    
-    if ms_abs >= Y:
-        return _plural(ms_value, ms_abs, Y, 'year')
-    if ms_abs >= MO:
-        return _plural(ms_value, ms_abs, MO, 'month')
-    if ms_abs >= W:
-        return _plural(ms_value, ms_abs, W, 'week')
-    if ms_abs >= D:
-        return _plural(ms_value, ms_abs, D, 'day')
-    if ms_abs >= H:
-        return _plural(ms_value, ms_abs, H, 'hour')
-    if ms_abs >= M:
-        return _plural(ms_value, ms_abs, M, 'minute')
-    if ms_abs >= S:
-        return _plural(ms_value, ms_abs, S, 'second')
-    return f"{int(ms_value)} ms"
-
-
-def _plural(ms_value: Union[int, float], ms_abs: float, n: float, name: str) -> str:
-    """Pluralization helper."""
-    is_plural = ms_abs >= n * 1.5
-    rounded = round(ms_value / n)
-    return f"{rounded} {name}{'s' if is_plural else ''}"
+    Matches the rounding of the JavaScript and Rust implementations; Python's
+    built-in :func:`round` would round ties to even instead.
+    """
+    numerator, denominator = value.numerator, value.denominator
+    sign = -1 if numerator < 0 else 1
+    return sign * ((2 * abs(numerator) + denominator) // (2 * denominator))
