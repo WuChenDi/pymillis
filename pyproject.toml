@@ -1,5 +1,5 @@
 [build-system]
-requires = ["flit_core >=3.11,<4"]
+requires = ["flit_core >=4.0.2,<5"]
 build-backend = "flit_core.buildapi"
 
 [project]
@@ -8,42 +8,61 @@ authors = [{name = "wudi", email = "wuchendi96@gmail.com"}]
 description = "Use this package to easily convert various time formats to milliseconds."
 readme = "README.md"
 dynamic = ["version"]
-license = {text = "MIT"}
-requires-python = ">=3.9"
+license = "MIT"
+license-files = ["LICENSE"]
+requires-python = ">=3.10"
 keywords = ["time", "milliseconds", "ms", "duration", "conversion"]
 classifiers = [
-    "Development Status :: 4 - Beta",
+    "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Developers",
     "Topic :: Software Development :: Libraries :: Python Modules",
-    "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
     "Programming Language :: Python :: 3.14",
+    "Typing :: Typed",
 ]
 
 [project.urls]
 "Bug Reports" = "https://github.com/WuChenDi/pymillis/issues"
 "Source" = "https://github.com/WuChenDi/pymillis"
 
-[tool.pytest.ini_options]
-testpaths = ["tests"]
-python_files = ["test_*.py"]
-python_classes = ["Test*"]
-python_functions = ["test_*"]
+[dependency-groups]
+dev = [
+    "mypy>=2.3.1",
+    "pytest>=9.1.1",
+    "pytest-cov>=7.1.0",
+    "ruff>=0.16.5",
+]
 
-[tool.black]
+[tool.pytest.ini_options]
+testpaths = ["tests", "pymillis"]
+addopts = ["--strict-markers", "--strict-config", "--doctest-modules"]
+filterwarnings = ["error"]
+
+[tool.coverage.run]
+source = ["pymillis"]
+branch = true
+
+[tool.coverage.report]
+exclude_lines = ["pragma: no cover", "@overload", "\\.\\.\\."]
+
+[tool.ruff]
 line-length = 100
-target-version = ['py39', 'py310', 'py311', 'py312', 'py313']
-include = '\.pyi?$'
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "UP", "B", "SIM", "RUF"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["E501"]
 
 [tool.mypy]
-python_version = "3.9"
-warn_return_any = true
-warn_unused_configs = true
-disallow_untyped_defs = false
+python_version = "3.10"
+files = ["pymillis"]
+strict = true
+warn_unreachable = true

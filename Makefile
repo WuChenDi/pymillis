@@ -1,19 +1,30 @@
-.PHONY: maint clean test build install-dev
+.PHONY: install lock lint fmt fmt-check typecheck test build clean
 
-install-dev:
-	pip install -e .
-	pip install -r requirements/dev.txt
+install:
+	uv sync
 
-maint:
-	pip-compile -U requirements/dev.in
+lock:
+	uv lock --upgrade
 
-clean:
-	python -m pip install pyclean
-	pyclean .
-	rm -rf tests/__pycache__ pymillis/__pycache__ htmlcov docs/_build dist pymillis.egg-info .pytest_cache .mypy_cache .benchmarks
+lint:
+	uv run ruff check .
+
+fmt:
+	uv run ruff format .
+	uv run ruff check . --fix
+
+fmt-check:
+	uv run ruff format --check .
+
+typecheck:
+	uv run mypy
 
 test:
-	pytest tests --cov=pymillis --cov-report term-missing -vv --cov-report html --durations=3
+	uv run pytest --cov=pymillis --cov-report=term-missing --cov-report=html --durations=3
 
 build:
-	python -m build
+	uv build
+
+clean:
+	rm -rf dist htmlcov .pytest_cache .mypy_cache .ruff_cache .coverage coverage.xml
+	find . -name __pycache__ -type d -prune -exec rm -rf {} +
